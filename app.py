@@ -1,6 +1,33 @@
 import streamlit as st
 import pandas as pd
 
+from reportlab.platypus import SimpleDocTemplate
+from reportlab.platypus import Table
+from reportlab.platypus import TableStyle
+from reportlab.lib import colors
+def generer_pdf(df):
+
+    pdf = "devis.pdf"
+
+    doc = SimpleDocTemplate(pdf)
+
+    data = [list(df.columns)]
+
+    data += df.values.tolist()
+
+    table = Table(data)
+
+    table.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,0),colors.grey),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
+        ('GRID',(0,0),(-1,-1),1,colors.black)
+    ]))
+
+    doc.build([table])
+
+    return pdf
+
+
 st.set_page_config(page_title="DJEFF ALUMINIUM", layout="wide")
 
 st.title("🏠 DJEFF ALUMINIUM")
@@ -196,6 +223,16 @@ if len(st.session_state.devis) > 0:
     st.download_button(
         "Télécharger CSV",
         csv,
+        pdf_file = generer_pdf(df)
+
+with open(pdf_file, "rb") as f:
+
+    st.download_button(
+        "📄 Télécharger PDF",
+        f,
+        file_name="devis_djeff.pdf",
+        mime="application/pdf"
+    )
         file_name="devis_djeff.csv",
         mime="text/csv"
     )
