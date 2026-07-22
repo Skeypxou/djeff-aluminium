@@ -5,6 +5,11 @@ from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus import Table
 from reportlab.platypus import TableStyle
 from reportlab.lib import colors
+
+
+# ---------------------------
+# Fonction PDF
+# ---------------------------
 def generer_pdf(df):
 
     pdf = "devis.pdf"
@@ -12,15 +17,14 @@ def generer_pdf(df):
     doc = SimpleDocTemplate(pdf)
 
     data = [list(df.columns)]
-
     data += df.values.tolist()
 
     table = Table(data)
 
     table.setStyle(TableStyle([
-        ('BACKGROUND',(0,0),(-1,0),colors.grey),
-        ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
-        ('GRID',(0,0),(-1,-1),1,colors.black)
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
     ]))
 
     doc.build([table])
@@ -28,15 +32,17 @@ def generer_pdf(df):
     return pdf
 
 
+# ---------------------------
+# Interface
+# ---------------------------
 st.set_page_config(page_title="DJEFF ALUMINIUM", layout="wide")
 
 st.title("🏠 DJEFF ALUMINIUM")
-st.subheader("Version 2 - Gestion multi-articles")
+st.subheader("Version 2 + PDF")
 
 # ---------------------------
 # Tarifs
 # ---------------------------
-
 with st.sidebar:
 
     st.header("Tarifs")
@@ -74,25 +80,23 @@ with st.sidebar:
 # ---------------------------
 # Client
 # ---------------------------
-
 client = st.text_input("Nom du client")
 
 # ---------------------------
-# Stockage Session
+# Session
 # ---------------------------
-
 if "devis" not in st.session_state:
     st.session_state.devis = []
 
 # ---------------------------
-# Nouvel Article
+# Nouvel article
 # ---------------------------
-
 st.header("Ajouter un article")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
+
     produit = st.selectbox(
         "Produit",
         [
@@ -159,9 +163,8 @@ hauteur = st.number_input(
 )
 
 # ---------------------------
-# Ajouter article
+# Ajouter au devis
 # ---------------------------
-
 if st.button("Ajouter au devis"):
 
     ml = (largeur + hauteur) * 2
@@ -196,14 +199,11 @@ if st.button("Ajouter au devis"):
 # ---------------------------
 # Tableau devis
 # ---------------------------
-
 st.header("Devis")
 
 if len(st.session_state.devis) > 0:
 
-    df = pd.DataFrame(
-        st.session_state.devis
-    )
+    df = pd.DataFrame(st.session_state.devis)
 
     st.dataframe(
         df,
@@ -216,27 +216,31 @@ if len(st.session_state.devis) > 0:
         f"TOTAL GENERAL : {total_general:,.0f} DA"
     )
 
+    # CSV
     csv = df.to_csv(
         index=False
     ).encode("utf-8")
 
     st.download_button(
-        "Télécharger CSV",
-        csv,
-        pdf_file = generer_pdf(df)
-
-with open(pdf_file, "rb") as f:
-
-    st.download_button(
-        "📄 Télécharger PDF",
-        f,
-        file_name="devis_djeff.pdf",
-        mime="application/pdf"
-    )
+        "📊 Télécharger CSV",
+        data=csv,
         file_name="devis_djeff.csv",
         mime="text/csv"
     )
 
+    # PDF
+    pdf_file = generer_pdf(df)
+
+    with open(pdf_file, "rb") as f:
+
+        st.download_button(
+            "📄 Télécharger PDF",
+            data=f,
+            file_name="devis_djeff.pdf",
+            mime="application/pdf"
+        )
+
+    # Effacer
     if st.button("Effacer devis"):
         st.session_state.devis = []
         st.rerun()
